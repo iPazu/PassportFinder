@@ -15,7 +15,6 @@ function PassportPage(props) {
 
 
     async function fetchBestWindows() {
-        setLoading(true)
         await fetchCityHalls();
         const allwindows = []
         console.log(cityHalls)
@@ -23,9 +22,11 @@ function PassportPage(props) {
         for (const cityHall of cityHalls) {
             console.log("FETCHING WINDOWS FOR")
             let window = await fetchWindows(cityHall)
-            console.log(window)
+            console.log("BAKEL CITY GANGSTERR")
+            console.log(window.slug)
             window.timeSlots.map((w, yindex) => {
                 w.cityHall = cityHall.corporate_name
+                w.slug = window.slug
             })
 
             allwindows.push(...window.timeSlots)
@@ -38,22 +39,25 @@ function PassportPage(props) {
         while (allwindows.length > 0) {
             let bestWindow = new Date(903903909999929)
             let bestCityHall
+            let bestSlug
             let inde
             allwindows.map((windows, index) => {
                 if (Date.parse(windows.start_date) < bestWindow) {
                     bestWindow = Date.parse(windows.start_date)
                     bestCityHall = windows.cityHall
+                    bestSlug = windows.slug
+                    console.log("aodaiodnaondoandioanidnaoidnoi")
+                    console.log(windows.slug)
                     inde = index
                 }
             });
             allwindows.splice(inde, 1)
             console.log(bestWindow)
             console.log(bestCityHall)
-            list.push({name: bestCityHall, time: bestWindow})
+            list.push({name: bestCityHall, time: bestWindow,slug: bestSlug})
         }
         setAllWindows(list)
         console.log(allWindows)
-        setLoading(false)
     }
 
     async function fetchCityHalls() {
@@ -85,7 +89,6 @@ function PassportPage(props) {
 
         axios.post('https://ws.synbird.com/v6/pro/company/search', data)
             .then(response => {
-                setLoading(false)
                 setCityHalls(response.data)
             });
 
@@ -97,18 +100,22 @@ function PassportPage(props) {
             {"id_professional_company": id, "slug": null}
 
         let profplace
+        let slug
         await axios.post('https://ws.synbird.com/v6/pro/company/get', data)
             .then(response => {
                 console.log("Response: ")
                 console.log(response.data)
+                slug  = response.data.professional.slug
                 profplace = response.data.professional.id_professional_place
             });
-        return profplace
+        return [profplace,slug]
 
     }
 
     async function fetchWindows(cityhall) {
-        const profplace = await getProfessionalPlace(cityhall.id_professional_company)
+        const res = await getProfessionalPlace(cityhall.id_professional_company)
+        const profplace = res[0]
+        const slug = res[1]
         const data =
 
             {
@@ -150,6 +157,9 @@ function PassportPage(props) {
                 console.log("Response: ")
                 console.log(response.data)
                 window = response.data
+                window.slug = slug
+                console.log("WINDOW: ")
+                console.log(window)
             });
         return window
 
@@ -158,8 +168,15 @@ function PassportPage(props) {
 
     return (
         <Flex direction={"column"} width={"100vw"} minHeight={"100vh"} alignItems={"center"}>
-            <Heading>Liste passeports</Heading>
-            <Button isLoading={loading} my={10} onClick={fetchBestWindows}>Rechercher</Button>
+            <Heading mt={10}>Liste des passeports</Heading>
+            <Text mt={1} color={"gray.500"}>Donne une liste des meilleurs créneaux disponible dans un rayon de 200km autour de Toulouse</Text>
+            <Button isLoading={loading} mt={10} onClick={() => {
+                setLoading(true)
+                setAllWindows([])
+                fetchBestWindows().then(() => {
+                    setLoading(false)
+                })}
+            }>Rechercher</Button>
             <Flex alignItems={"center"} direction={"column"}>
 
 
@@ -172,8 +189,8 @@ function PassportPage(props) {
 
                                 {
                                     allWindows.map((windows, index) => {
-                                        return <Card dropShadow={"0 0 0 0 2px"}  key={index} m={1}>
-                                            <CardBody>
+                                        return <Card _hover={{cursor: "pointer"}} dropShadow={"0 0 0 0 2px"}  key={index} m={1}>
+                                            <CardBody onClick={() =>  window.location.href = `https://app.synbird.com/${windows.slug}`}>
                                                 <Text>{format(new Date(windows.time), "d MMMM", {locale: fr})}</Text>
                                                 <Text>{windows.name}</Text>
                                             </CardBody>
