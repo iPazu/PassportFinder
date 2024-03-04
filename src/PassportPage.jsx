@@ -169,7 +169,7 @@ function PassportPage(props) {
     return (
         <Flex direction={"column"} width={"100vw"} minHeight={"100vh"} alignItems={"center"}>
             <Heading mt={10}>Liste des passeports</Heading>
-            <Text mt={1} color={"gray.500"}>Donne une liste des meilleurs créneaux disponible dans un rayon de 200km autour de Toulouse</Text>
+            <Text mt={1} color={"gray.500"}>Donne une liste des meilleurs créneaux disponible dans un rayon de 200km autour de Paris</Text>
             <Button isLoading={loading} mt={10} onClick={() => {
                 setLoading(true)
                 setAllWindows([])
